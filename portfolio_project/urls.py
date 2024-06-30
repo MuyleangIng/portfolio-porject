@@ -9,5 +9,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('select-templates/', views.SelectTemplateListCreateView.as_view(), name='select-template-list-create'),
     path('select-templates/<int:pk>/', views.SelectTemplateDetailView.as_view(), name='select-template-detail'),
+    path('<str:username>/<str:unique_slug>/', views.PublicPortfolioView.as_view(), name='public-portfolio-view'),
 
 ]

@@ -7,8 +7,25 @@ import string
 from django.urls import reverse
 from django.utils.text import slugify
 import uuid
-from django.db.models.signals import pre_save
+from rest_framework import permissions, generics
 
+from django.db.models.signals import pre_save
+class IsOwnerOrReadOnly(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return obj.is_public or obj.created_by == request.user
+        return obj.created_by == request.user
+
+class IsAdminUserOrOwner(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.user and request.user.is_staff:
+            return True
+        return request.user and view.action in ['list', 'retrieve']
+
+    def has_object_permission(self, request, view, obj):
+        if request.user and request.user.is_staff:
+            return True
+        return obj.created_by == request.user
 class Role(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50, unique=True)
