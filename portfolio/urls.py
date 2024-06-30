@@ -1,0 +1,35 @@
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('users/', views.UserViewSet.as_view({'get': 'list', 'post': 'create'}), name='user-list-create'),
+    path('users/<int:pk>/', views.UserViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='user-detail'),
+    path('roles/', views.RoleListCreateView.as_view(), name='role-list-create'),
+    path('contacts/', views.ContactListCreateView.as_view(), name='contact-list-create'),
+    path('contacts/<int:pk>/', views.ContactDetailView.as_view(), name='contact-detail'),
+    path('blogs/', views.BlogListCreateView.as_view(), name='blog-list-create'),
+    path('blogs/<int:pk>/', views.BlogDetailView.as_view(), name='blog-detail'),
+    path('skills/', views.SkillListCreateView.as_view(), name='skill-list-create'),
+    path('skills/<int:pk>/', views.SkillDetailView.as_view(), name='skill-detail'),
+    path('work-experiences/', views.WorkExperienceListCreateView.as_view(), name='work-experience-list-create'),
+    path('work-experiences/<int:pk>/', views.WorkExperienceDetailView.as_view(), name='work-experience-detail'),
+    path('services/', views.ServiceListCreateView.as_view(), name='service-list-create'),
+    path('services/<int:pk>/', views.ServiceDetailView.as_view(), name='service-detail'),
+    path('projects/', views.ProjectListCreateView.as_view(), name='project-list-create'),
+    path('projects/<int:pk>/', views.ProjectDetailView.as_view(), name='project-detail'),
+    path('template-portfolios/', views.TemplatePortfolioListCreateView.as_view(), name='template-portfolio-list-create'),
+    path('template-portfolios/<int:pk>/', views.TemplatePortfolioDetailView.as_view(), name='template-portfolio-detail'),
+    path('select-templates/', views.SelectTemplateListCreateView.as_view(), name='select-template-list-create'),
+    path('select-templates/<int:pk>/', views.SelectTemplateDetailView.as_view(), name='select-template-detail'),
+    path('upload-portfolios/', views.UploadPortfolioListCreateView.as_view(), name='upload-portfolio-list-create'),
+    path('upload-portfolios/<int:pk>/', views.UploadPortfolioDetailView.as_view(), name='upload-portfolio-detail'),
+    path('draft-portfolios/', views.DraftPortfolioListCreateView.as_view(), name='draft-portfolio-list-create'),
+    path('draft-portfolios/<int:pk>/', views.DraftPortfolioDetailView.as_view(), name='draft-portfolio-detail'),
+    path('template-portfolios/<int:pk>/public/', views.TemplatePortfolioPublicUpdateView.as_view(), name='template-portfolio-public-update'),
+
+    path('register/', views.UserRegistrationView.as_view(), name='register'),
+    path('login/', views.LoginView.as_view(), name='login'),
+    path('verify-otp/', views.VerifyOTPView.as_view(), name='verify-otp'),
+    path('profile/', views.UserProfileView.as_view(), name='profile'),
+    path('<str:username>/<str:unique_slug>/', views.PublicPortfolioView.as_view(), name='public-portfolio-view'),
+]
