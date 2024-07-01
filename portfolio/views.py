@@ -12,7 +12,11 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from django.shortcuts import get_object_or_404
-
+from http import HTTPStatus
+from .custom_views import CustomListCreateAPIView
+from rest_framework.parsers import MultiPartParser, FormParser
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 class UserRegistrationView(APIView):
     permission_classes = [AllowAny]
 
@@ -70,19 +74,52 @@ class UserRegistrationView(APIView):
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
-
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
         user = authenticate(request, email=email, password=password)
+        if not email or not password:
 
+            missing_fields = []
+            print('this is missing_fields',missing_fields)
+            if not email:
+                missing_fields.append("email")
+            if not password:
+                missing_fields.append("password")
+            return Response(
+                {
+                    "message": "Email and password are required.",
+                    "status": 400,
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
         if user is not None:
             refresh = RefreshToken.for_user(user)
             return Response({
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
+                "status": HTTPStatus.OK
             })
-        return Response({"message": "Invalid email or password"}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({
+            "message": "Invalid email or password",
+            "status": 401,
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+# class LoginView(APIView):
+#     permission_classes = [AllowAny]
+
+#     def post(self, request):
+#         email = request.data.get('email')
+#         password = request.data.get('password')
+#         user = authenticate(request, email=email, password=password)
+
+#         if user is not None:
+#             refresh = RefreshToken.for_user(user)
+#             return Response({
+#                 'refresh': str(refresh),
+#                 'access': str(refresh.access_token),
+#             })
+#         return Response({"message": "Invalid email or password"}, status=status.HTTP_401_UNAUTHORIZED)
 
 class VerifyOTPView(APIView):
     permission_classes = [AllowAny]
@@ -137,72 +174,78 @@ class UserViewSet(viewsets.ModelViewSet):
             return User.objects.all()
         return User.objects.filter(id=self.request.user.id)
 
-class RoleListCreateView(generics.ListCreateAPIView):
+class RoleListCreateView(CustomListCreateAPIView):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
     permission_classes = [permissions.IsAuthenticated]
-
-class ContactListCreateView(generics.ListCreateAPIView):
+class ContactListCreateView(CustomListCreateAPIView):
     queryset = Contact.objects.all()
     serializer_class = ContactSerializer
-    permission_classes = [IsAuthenticated]
-
+    permission_classes = [permissions.IsAuthenticated]
     def get_queryset(self):
         if self.request.user.is_staff:
             return Contact.objects.all()
         return Contact.objects.filter(created_by=self.request.user)
+    def get_serializer_context(self):
+        return {'request': self.request}
+        
 
 class ContactDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Contact.objects.all()
     serializer_class = ContactSerializer
-    permission_classes = [IsOwner]
+    permission_classes = [IsAuthenticated]
 
-class BlogListCreateView(generics.ListCreateAPIView):
+class BlogListCreateView(CustomListCreateAPIView):
     queryset = Blog.objects.all()
     serializer_class = BlogSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         if self.request.user.is_staff:
             return Blog.objects.all()
         return Blog.objects.filter(created_by=self.request.user)
 
+    def get_serializer_context(self):
+        return {'request': self.request}
+
 class BlogDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Blog.objects.all()
     serializer_class = BlogSerializer
-    permission_classes = [IsOwner]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
 
-class SkillListCreateView(generics.ListCreateAPIView):
+class SkillListCreateView(CustomListCreateAPIView):
     queryset = Skill.objects.all()
     serializer_class = SkillSerializer
-    permission_classes = [IsAuthenticated]
-
+    permission_classes = [permissions.IsAuthenticated]
     def get_queryset(self):
         if self.request.user.is_staff:
             return Skill.objects.all()
         return Skill.objects.filter(created_by=self.request.user)
+    def get_serializer_context(self):
+        return {'request': self.request}
 
 class SkillDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Skill.objects.all()
     serializer_class = SkillSerializer
-    permission_classes = [IsOwner]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
 
-class WorkExperienceListCreateView(generics.ListCreateAPIView):
+class WorkExperienceListCreateView(CustomListCreateAPIView):
     queryset = WorkExperience.objects.all()
     serializer_class = WorkExperienceSerializer
-    permission_classes = [IsAuthenticated]
-
+    permission_classes = [permissions.IsAuthenticated]
     def get_queryset(self):
         if self.request.user.is_staff:
             return WorkExperience.objects.all()
         return WorkExperience.objects.filter(created_by=self.request.user)
+    def get_serializer_context(self):
+        return {'request': self.request}
 
 class WorkExperienceDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = WorkExperience.objects.all()
     serializer_class = WorkExperienceSerializer
-    permission_classes = [IsOwner]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
 
-# class ServiceListCreateView(generics.ListCreateAPIView):
+# class ServiceListCreateView(CustomListCreateAPIView):
 #     queryset = Service.objects.all()
 #     serializer_class = ServiceSerializer
 #     permission_classes = [IsAuthenticated]
@@ -211,11 +254,14 @@ class WorkExperienceDetailView(generics.RetrieveUpdateDestroyAPIView):
 #         if self.request.user.is_staff:
 #             return Service.objects.all()
 #         return Service.objects.filter(created_by=self.request.user)
-class ServiceListCreateView(generics.ListCreateAPIView):
+class ServiceListCreateView(CustomListCreateAPIView):
     queryset = Service.objects.all()
     serializer_class = ServiceSerializer
     permission_classes = [IsAuthenticated]
-
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return Service.objects.all()
+        return Service.objects.filter(created_by=self.request.user)
     def get_queryset(self):
         if self.request.user.is_staff:
             return Service.objects.all()
@@ -234,11 +280,14 @@ class ServiceDetailView(generics.RetrieveUpdateDestroyAPIView):
         serializer = self.get_serializer(instance)
         return Response(serializer.data)    
 
-class ProjectListCreateView(generics.ListCreateAPIView):
+class ProjectListCreateView(CustomListCreateAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = [IsAuthenticated]
-
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return Project.objects.all()
+        return Project.objects.filter(created_by=self.request.user)
     def get_queryset(self):
         if self.request.user.is_staff:
             return Project.objects.all()
@@ -247,17 +296,17 @@ class ProjectListCreateView(generics.ListCreateAPIView):
 class ProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
-    permission_classes = [IsOwner]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
 
-class TemplateListCreateView(generics.ListCreateAPIView):
+class TemplateListCreateView(CustomListCreateAPIView):
     queryset = Template.objects.all()
     serializer_class = TemplateSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [AllowAny]
 
 class TemplatePortfolioDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = TemplatePortfolio.objects.all()
     serializer_class = TemplatePortfolioSerializer
-    permission_classes = [IsOwner]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
 
     def get(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -269,7 +318,7 @@ class TemplatePortfolioDetailView(generics.RetrieveUpdateDestroyAPIView):
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
-class TemplatePortfolioListCreateView(generics.ListCreateAPIView):
+class TemplatePortfolioListCreateView(CustomListCreateAPIView):
     queryset = TemplatePortfolio.objects.all()
     serializer_class = TemplatePortfolioSerializer
     permission_classes = [IsAuthenticated]
@@ -300,7 +349,7 @@ class TemplatePortfolioListCreateView(generics.ListCreateAPIView):
 
 class PublicPortfolioView(generics.RetrieveAPIView):
     queryset = TemplatePortfolio.objects.all()
-    serializer_class = TemplatePortfolioSerializer
+    serializer_class = CustomTemplatePortfolioSerializer
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, username, unique_slug, *args, **kwargs):
@@ -327,7 +376,7 @@ class TemplatePortfolioPublicUpdateView(generics.UpdateAPIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class SelectTemplateListCreateView(generics.ListCreateAPIView):
+class SelectTemplateListCreateView(CustomListCreateAPIView):
     queryset = SelectTemplate.objects.all()
     serializer_class = SelectTemplateSerializer
     permission_classes = [IsAuthenticated]
@@ -383,7 +432,7 @@ class SelectTemplateDetailView(generics.RetrieveUpdateDestroyAPIView):
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-class UploadPortfolioListCreateView(generics.ListCreateAPIView):
+class UploadPortfolioListCreateView(CustomListCreateAPIView):
     queryset = UploadPortfolio.objects.all()
     serializer_class = UploadPortfolioSerializer
     permission_classes = [IsAuthenticated]
@@ -398,7 +447,7 @@ class UploadPortfolioDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = UploadPortfolioSerializer
     permission_classes = [IsOwner]
 
-class DraftPortfolioListCreateView(generics.ListCreateAPIView):
+class DraftPortfolioListCreateView(CustomListCreateAPIView):
     queryset = DraftPortfolio.objects.all()
     serializer_class = DraftPortfolioSerializer
     permission_classes = [IsAuthenticated]
@@ -412,3 +461,19 @@ class DraftPortfolioDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = DraftPortfolio.objects.all()
     serializer_class = DraftPortfolioSerializer
     permission_classes = [IsOwner]
+class UploadedFileView(generics.ListCreateAPIView):
+    queryset = UploadedFile.objects.all()
+    serializer_class = UploadedFileSerializer
+    parser_classes = [MultiPartParser, FormParser]
+    permission_classes = [AllowAny]
+
+    @method_decorator(csrf_exempt)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -26,10 +26,12 @@ urlpatterns = [
     path('draft-portfolios/', views.DraftPortfolioListCreateView.as_view(), name='draft-portfolio-list-create'),
     path('draft-portfolios/<int:pk>/', views.DraftPortfolioDetailView.as_view(), name='draft-portfolio-detail'),
     path('template-portfolios/<int:pk>/public/', views.TemplatePortfolioPublicUpdateView.as_view(), name='template-portfolio-public-update'),
-
+    path('templates/', views.TemplateListCreateView.as_view(), name='template-list-create'),
+    # path('templates/<int:pk>/', views.TemplateDetailView.as_view(), name='template-detail'),
     path('register/', views.UserRegistrationView.as_view(), name='register'),
     path('login/', views.LoginView.as_view(), name='login'),
     path('verify-otp/', views.VerifyOTPView.as_view(), name='verify-otp'),
     path('profile/', views.UserProfileView.as_view(), name='profile'),
     path('<str:username>/<str:unique_slug>/', views.PublicPortfolioView.as_view(), name='public-portfolio-view'),
+    path('upload/', views.UploadedFileView.as_view(), name='file-upload'),
 ]
