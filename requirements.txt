@@ -1,0 +1,10 @@
+Django==3.2.6
+psycopg2-binary==2.9.1
+gunicorn==20.1.0
+django-cors-headers==3.8.0
+django-rest-framework==0.1.0
+djangorestframework==3.12.4
+djangorestframework-simplejwt==5.1.0
+python-decouple==3.5
+drf-writable-nested==0.6.2
+django-filter==2.4.0

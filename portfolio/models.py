@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.utils.text import slugify
 import uuid
 from rest_framework import permissions, generics
+import os
 
 from django.db.models.signals import pre_save
 class IsOwnerOrReadOnly(permissions.BasePermission):
@@ -143,24 +144,28 @@ class Contact(models.Model):
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.title
 
 class Blog(models.Model):
-    image = models.CharField(max_length=255, blank=True, null=True)
+    id = models.AutoField(primary_key=True)
+    image = models.JSONField()
     title = models.CharField(max_length=255)
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.title
-
 class Skill(models.Model):
+    image = models.JSONField()
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.title
@@ -174,19 +179,22 @@ class WorkExperience(models.Model):
     responsibility = models.CharField(max_length=255)
     work_address = models.CharField(max_length=255)
     company_name = models.CharField(max_length=255)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.job_title
 
 class Service(models.Model):
-    image = models.CharField(max_length=255, blank=True, null=True)
+    image = models.JSONField()
     title = models.CharField(max_length=255)
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.title
+
 
 class Project(models.Model):
     project_title = models.CharField(max_length=255)
@@ -195,6 +203,7 @@ class Project(models.Model):
     project_image = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.project_title
@@ -258,3 +267,23 @@ class DraftPortfolio(models.Model):
 
     def __str__(self):
         return f"{self.template.title} drafted"
+class UploadedFile(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    file = models.FileField(upload_to='uploads/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.id = uuid.uuid4()
+        if self.file and not self._state.adding:
+            original_extension = os.path.splitext(self.file.name)[1]
+            self.file.name = f"{self.id}{original_extension}"
+        super().save(*args, **kwargs)
+
+    @property
+    def filename(self):
+        return self.file.name
+
+    @property
+    def url(self):
+        return self.file.url

@@ -1,0 +1,23 @@
+{
+    "title": "Sample Blog",
+    "description": "This is a sample blog.",
+    "image": [
+        {
+            "url": "image1.jpg",
+            "alt": "Image 1"
+        },
+        {
+            "url": "image2.jpg",
+            "alt": "Image 2"
+        }
+    ]
+  }
+  
+
+
+  {
+    "title": "Sample Blog",
+    "description": "This is a sample blog.",
+    "image": ["image1.jpg","image2.jpg"  ]
+  }
+    
