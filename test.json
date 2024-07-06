@@ -1,23 +1,36 @@
 {
-    "title": "Sample Blog",
-    "description": "This is a sample blog.",
-    "image": [
+    "sport_category": "741de643-e108-4b09-8027-e3edb386846f",
+    "sport_name": "New Club",
+    "location": "New Location",
+    "seat_number": 100,
+    "skill_level": "Intermediate",
+    "description": "New club description",
+    "image": "club_image.png",
+    "reviews": "new_reviews",
+    "profile": "new_profile",
+    "cover": "new_cover",
+    "price": "15$",
+    "contact_info": [
         {
-            "url": "image1.jpg",
-            "alt": "Image 1"
+            "first_phone": "1234567890"
         },
         {
-            "url": "image2.jpg",
-            "alt": "Image 2"
-        }
+            "second_phone": "0987654321"
+        },
+        {
+            "email": "sporthub@gmail.com"
+        },
+        {
+            "website": "www.sporthub.com"
+        },
+        {
+            "facebook": "www.facebook.com/sporthub"
+        },
+        {
+            "instagram": "www.instagram.com/sporthub"
+        },
+        {
+            "twitter": "www.twitter.com/sporthub"
+        }    
     ]
-  }
-  
-
-
-  {
-    "title": "Sample Blog",
-    "description": "This is a sample blog.",
-    "image": ["image1.jpg","image2.jpg"  ]
-  }
-    
+}
