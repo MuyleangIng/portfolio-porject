@@ -128,7 +128,9 @@ class User(AbstractBaseUser, PermissionsMixin):
             self.save()
             return True
         return False
-
+    def reset_password(self, new_password):
+        self.set_password(new_password)
+        self.save()
 class UserRole(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     role = models.ForeignKey(Role, on_delete=models.CASCADE)

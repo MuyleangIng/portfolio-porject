@@ -1,7 +1,51 @@
 from rest_framework import serializers
 from .models import *
 
+class PasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp_code = serializers.CharField(max_length=6)
+    password = serializers.CharField(write_only=True)
+    confirmPassword = serializers.CharField(write_only=True)
 
+    def validate(self, data):
+        email = data.get('email')
+        otp_code = data.get('otp_code')
+        password = data.get('password')
+        confirmPassword = data.get('confirmPassword')
+
+        if password != confirmPassword:
+            raise serializers.ValidationError({"password": "Passwords do not match."})
+
+        try:
+            user = User.objects.get(email=email, otp_code=otp_code)
+        except User.DoesNotExist:
+            raise serializers.ValidationError({"otp_code": "Invalid email or OTP code."})
+
+        if timezone.now() > user.otp_expires_at:
+            raise serializers.ValidationError({"otp_code": "OTP code has expired."})
+
+        return data
+
+    def save(self, **kwargs):
+        email = self.validated_data['email']
+        otp_code = self.validated_data['otp_code']
+        password = self.validated_data['password']
+
+        user = User.objects.get(email=email, otp_code=otp_code)
+        user.reset_password(password)
+        user.otp_code = None
+        user.otp_expires_at = None
+        user.is_verified = True
+        user.is_active = True
+        user.save()
+        return user
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("User with this email does not exist.")
+        return value
 
 class UserSimpleSerializer(serializers.ModelSerializer):
     class Meta:

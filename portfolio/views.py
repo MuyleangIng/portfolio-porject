@@ -17,6 +17,55 @@ from .custom_views import CustomListCreateAPIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+class ResendRegistrationOTPView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get('email')
+        try:
+            user = User.objects.get(email=email)
+            if not user.is_verified:
+                user.set_otp()
+                send_mail(
+                    'Your New OTP Code',
+                    f'Your new OTP code is {user.otp_code}',
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                )
+                return Response({"message": "New OTP code sent to your email address."}, status=status.HTTP_200_OK)
+            return Response({"message": "Email is already verified. No need to resend OTP."}, status=status.HTTP_400_BAD_REQUEST)
+        except User.DoesNotExist:
+            return Response({"error": "User with this email does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+class PasswordResetView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                "message": "Password reset successfully. You can now log in with the new password."
+            }, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class PasswordResetRequestView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            user = User.objects.get(email=email)
+            user.set_otp()
+            send_mail(
+                'Your OTP Code for Password Reset',
+                f'Your OTP code is {user.otp_code}',
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+            )
+            return Response({
+                "message": "OTP code sent to your email address."
+            }, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 class UserRegistrationView(APIView):
     permission_classes = [AllowAny]
 

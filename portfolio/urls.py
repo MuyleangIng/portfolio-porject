@@ -34,4 +34,7 @@ urlpatterns = [
     path('profile/', views.UserProfileView.as_view(), name='profile'),
     path('<str:username>/<str:unique_slug>/', views.PublicPortfolioView.as_view(), name='public-portfolio-view'),
     path('upload/', views.UploadedFileView.as_view(), name='file-upload'),
+    path('password-reset-request/', views.PasswordResetRequestView.as_view(), name='password-reset-request'),
+    path('password-reset/', views.PasswordResetView.as_view(), name='password-reset'),
+    path('resend-otp/', views.ResendRegistrationOTPView.as_view(), name='resend-registration-otp'),    
 ]
