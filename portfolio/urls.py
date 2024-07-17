@@ -37,4 +37,6 @@ urlpatterns = [
     path('password-reset-request/', views.PasswordResetRequestView.as_view(), name='password-reset-request'),
     path('password-reset/', views.PasswordResetView.as_view(), name='password-reset'),
     path('resend-otp/', views.ResendRegistrationOTPView.as_view(), name='resend-registration-otp'),    
+    path('aboutme/', views.AboutMeListCreateView.as_view(), name='aboutme-list-create'),
+    path('aboutme/<int:pk>/', views.AboutMeDetailView.as_view(), name='aboutme-detail'),
 ]

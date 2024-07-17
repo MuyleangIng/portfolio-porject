@@ -202,15 +202,25 @@ class Project(models.Model):
     project_title = models.CharField(max_length=255)
     project_description = models.TextField()
     link_to_project = models.CharField(max_length=255, blank=True, null=True)
-    project_image = models.CharField(max_length=255, blank=True, null=True)
+    project_image = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.project_title
-
+class AboutMe(models.Model):
+    profile_picture = models.TextField()
+    biography = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    def __str__(self):
+        return f"About Me of {self.created_by.username}"
 class Template(models.Model):
+    description = models.TextField()
+    image = models.TextField()
+    more_info = models.TextField()
     name = models.CharField(max_length=255)
 
     def __str__(self):
@@ -242,6 +252,7 @@ class TemplatePortfolio(models.Model):
     service = models.ForeignKey(Service, on_delete=models.CASCADE)
     skill = models.ForeignKey(Skill, on_delete=models.CASCADE)
     template = models.ForeignKey(Template, on_delete=models.CASCADE)
+    about_me = models.ForeignKey(AboutMe, on_delete=models.CASCADE)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     select_template = models.ForeignKey('SelectTemplate', on_delete=models.CASCADE, related_name='template_portfolios')
     unique_slug = models.SlugField(unique=True, blank=True, null=True)

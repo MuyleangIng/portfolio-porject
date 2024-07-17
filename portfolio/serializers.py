@@ -46,7 +46,11 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         if not User.objects.filter(email=value).exists():
             raise serializers.ValidationError("User with this email does not exist.")
         return value
-
+class AboutMeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AboutMe
+        fields = '__all__'
+        read_only_fields = ['created_by', 'created_at', 'updated_at']
 class UserSimpleSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -258,7 +262,7 @@ class TemplatePortfolioSerializer(serializers.ModelSerializer):
     class Meta:
         model = TemplatePortfolio
         fields = [
-            'id', 'title', 'type', 'social_media_link_json', 'portfolio_avatar', 
+            'id', 'title', 'type', 'social_media_link_json', 'portfolio_avatar', 'about_me',
             'biography', 'we', 'project', 'status', 'hero_image', 'created_at', 
             'updated_at', 'section_image', 'contact', 'blog', 'service', 'skill', 
             'template', 'created_by', 'select_template', 'is_public', 'unique_slug', 'url'
@@ -316,13 +320,14 @@ class CustomTemplatePortfolioSerializer(serializers.ModelSerializer):
     service = ServiceSerializer()
     blog = BlogSerializer()
     contact = ContactSerializer()
+    about_me = AboutMeSerializer()
     class Meta:
         model = TemplatePortfolio
         fields = [
             'id', 'title', 'type', 'social_media_link_json', 'portfolio_avatar', 
             'biography', 'we', 'project', 'status', 'hero_image', 'created_at', 
             'updated_at', 'section_image', 'contact', 'blog', 'service', 'skill', 
-            'template', 'created_by', 'select_template', 'is_public', 'unique_slug', 'url'
+            'template', 'created_by', 'select_template', 'is_public', 'unique_slug', 'url','about_me'
         ]
 
     def get_created_by(self, obj):
@@ -350,7 +355,8 @@ class CustomTemplatePortfolioSerializer(serializers.ModelSerializer):
 
     def get_skill(self, obj):
         return SkillSerializer(obj.skill).data if obj.skill else None
-
+    def get_aboutme(self, obj):
+        return AboutMeSerializer(obj.about_me).data if obj.about_me else None
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         # Remove `id` and `created_by` from nested representations

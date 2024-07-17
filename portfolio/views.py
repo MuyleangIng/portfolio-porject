@@ -272,7 +272,28 @@ class SkillListCreateView(CustomListCreateAPIView):
         return Skill.objects.filter(created_by=self.request.user)
     def get_serializer_context(self):
         return {'request': self.request}
+class AboutMeListCreateView(generics.ListCreateAPIView):
+    queryset = AboutMe.objects.all()
+    serializer_class = AboutMeSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return AboutMe.objects.all()
+        return AboutMe.objects.filter(created_by=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
+class AboutMeDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = AboutMe.objects.all()
+    serializer_class = AboutMeSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return AboutMe.objects.all()
+        return AboutMe.objects.filter(created_by=self.request.user)
 class SkillDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Skill.objects.all()
     serializer_class = SkillSerializer
