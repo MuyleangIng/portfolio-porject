@@ -81,7 +81,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(max_length=30)
     dob = models.DateField(blank=True, null=True)
     address = models.CharField(max_length=255, blank=True, null=True)
-    avatar = models.CharField(max_length=255, blank=True, null=True)
+    avatar = models.TextField(blank=True, null=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)  # Email verification status
@@ -210,11 +210,14 @@ class Project(models.Model):
     def __str__(self):
         return self.project_title
 class AboutMe(models.Model):
-    profile_picture = models.TextField()
-    biography = models.TextField()
+    images = models.JSONField()  # Stores images as JSON
+    titles = models.JSONField()  # Stores titles as JSON
+    descriptions = models.JSONField()  # Stores descriptions as JSON
+    personal_info = models.JSONField()  # Stores all personal info as JSON
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+
     def __str__(self):
         return f"About Me of {self.created_by.username}"
 class Template(models.Model):

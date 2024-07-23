@@ -7,7 +7,7 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import *
 from .serializers import *
-from .permissions import IsOwner
+from .permissions import *
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
@@ -299,21 +299,35 @@ class SkillDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = SkillSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
 
-class WorkExperienceListCreateView(CustomListCreateAPIView):
+
+class WorkExperienceListCreateView(generics.ListCreateAPIView):
     queryset = WorkExperience.objects.all()
     serializer_class = WorkExperienceSerializer
     permission_classes = [permissions.IsAuthenticated]
+
     def get_queryset(self):
         if self.request.user.is_staff:
             return WorkExperience.objects.all()
         return WorkExperience.objects.filter(created_by=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
     def get_serializer_context(self):
         return {'request': self.request}
 
 class WorkExperienceDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = WorkExperience.objects.all()
     serializer_class = WorkExperienceSerializer
-    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnlyWithoutPublic]
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return WorkExperience.objects.all()
+        return WorkExperience.objects.filter(created_by=self.request.user)
+
+    def get_serializer_context(self):
+        return {'request': self.request}
 
 # class ServiceListCreateView(CustomListCreateAPIView):
 #     queryset = Service.objects.all()
@@ -373,6 +387,49 @@ class TemplateListCreateView(CustomListCreateAPIView):
     serializer_class = TemplateSerializer
     permission_classes = [AllowAny]
 
+# class TemplatePortfolioDetailView(generics.RetrieveUpdateDestroyAPIView):
+#     queryset = TemplatePortfolio.objects.all()
+#     serializer_class = TemplatePortfolioSerializer
+#     permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
+
+#     def get(self, request, *args, **kwargs):
+#         instance = self.get_object()
+#         if not instance.is_public and instance.created_by != request.user:
+#             return Response(
+#                 {"message": "You do not have permission to view this portfolio."},
+#                 status=status.HTTP_403_FORBIDDEN
+#             )
+#         serializer = self.get_serializer(instance)
+#         return Response(serializer.data)
+
+# class TemplatePortfolioListCreateView(CustomListCreateAPIView):
+#     queryset = TemplatePortfolio.objects.all()
+#     serializer_class = TemplatePortfolioSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def get_queryset(self):
+#         if self.request.user.is_staff:
+#             return TemplatePortfolio.objects.all()
+#         return TemplatePortfolio.objects.filter(created_by=self.request.user)
+
+#     def get_serializer_context(self):
+#         return {'request': self.request}
+
+#     def create(self, request, *args, **kwargs):
+#         serializer = self.get_serializer(data=request.data)
+#         if not serializer.is_valid():
+#             errors = serializer.errors
+#             formatted_errors = [{"field": field, "error": error[0]} for field, error in errors.items()]
+#             return Response(
+#                 {
+#                     "message": "Validation errors occurred.",
+#                     "status": 400,
+#                     "errors": formatted_errors
+#                 },
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
+#         serializer.save()
+#         return Response(serializer.data, status=status.HTTP_201_CREATED)
 class TemplatePortfolioDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = TemplatePortfolio.objects.all()
     serializer_class = TemplatePortfolioSerializer
@@ -388,7 +445,7 @@ class TemplatePortfolioDetailView(generics.RetrieveUpdateDestroyAPIView):
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
-class TemplatePortfolioListCreateView(CustomListCreateAPIView):
+class TemplatePortfolioListCreateView(generics.ListCreateAPIView):
     queryset = TemplatePortfolio.objects.all()
     serializer_class = TemplatePortfolioSerializer
     permission_classes = [IsAuthenticated]
@@ -416,7 +473,6 @@ class TemplatePortfolioListCreateView(CustomListCreateAPIView):
             )
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
 class PublicPortfolioView(generics.RetrieveAPIView):
     queryset = TemplatePortfolio.objects.all()
     serializer_class = CustomTemplatePortfolioSerializer

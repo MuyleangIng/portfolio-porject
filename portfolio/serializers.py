@@ -210,8 +210,8 @@ class WorkExperienceSerializer(serializers.ModelSerializer):
         extra_kwargs = {'created_by': {'read_only': True}}
 
     def create(self, validated_data):
-        request = self.context.get('request', None)
-        if request and request.user.is_authenticated:
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
             validated_data['created_by'] = request.user
         return super().create(validated_data)
 
